@@ -1,0 +1,47 @@
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+v skip target nn_mod
+v skip target xgboost_mod
+v skip target diab_data_raw
+v skip target rf_mod
+v skip target naive_bayes_mod
+v skip target knn_mod
+v skip target diab_data_clean
+v skip target diab_val_split
+v skip target diab_val_data
+v skip target diab_analysis_data
+v skip target diab_tt_split
+v skip target diab_test
+v skip target diab_train
+v skip target xgboost_recipe
+v skip target diab_train_folds
+v skip target nn_recipe
+v skip target naive_bayes_recipe
+v skip target knn_recipe
+v skip target rf_recipe
+v skip target xgboost_workflow
+v skip target nn_workflow
+v skip target naive_bayes_workflow
+v skip target knn_workflow
+v skip target rf_workflow
+v skip target xgboost_tuning_res
+v skip target nn_tuning_res
+v skip target naive_bayes_fit
+v skip target knn_tuning_res
+* start target rf_tuning_res
+x error target rf_tuning_res
+* end pipeline: 1.131 hours
+Error in tar_throw_run(target$metrics$error) : 
+  error reading from connection
+slurmstepd: error: *** JOB 23653010 ON c28a-s6 CANCELLED AT 2022-03-30T20:29:22 ***
+slurmstepd: error: Detected 2 oom-kill event(s) in StepId=23653010.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.

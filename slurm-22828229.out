@@ -1,0 +1,91 @@
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+v skip target nn_mod
+v skip target xgboost_mod
+v skip target diab_data_raw
+v skip target rf_mod
+v skip target naive_bayes_mod
+v skip target knn_mod
+v skip target diab_data_clean
+* start target diab_val_split
+* built target diab_val_split
+* start target diab_val_data
+* built target diab_val_data
+* start target diab_analysis_data
+* built target diab_analysis_data
+* start target diab_tt_split
+* built target diab_tt_split
+* start target diab_test
+* built target diab_test
+* start target diab_train
+* built target diab_train
+* start target xgboost_recipe
+* built target xgboost_recipe
+* start target diab_train_folds
+* built target diab_train_folds
+* start target nn_recipe
+* built target nn_recipe
+* start target naive_bayes_recipe
+* built target naive_bayes_recipe
+* start target knn_recipe
+* built target knn_recipe
+* start target rf_recipe
+* built target rf_recipe
+* start target xgboost_workflow
+* built target xgboost_workflow
+* start target nn_workflow
+* built target nn_workflow
+* start target naive_bayes_workflow
+* built target naive_bayes_workflow
+* start target knn_workflow
+* built target knn_workflow
+* start target rf_workflow
+* built target rf_workflow
+* start target xgboost_tuning_res
+* built target xgboost_tuning_res
+* start target nn_tuning_res
+* built target nn_tuning_res
+* start target naive_bayes_fit
+* built target naive_bayes_fit
+* start target knn_tuning_res
+* built target knn_tuning_res
+* start target rf_tuning_res
+x error target rf_tuning_res
+* end pipeline: 15.961 hours
+Error in tar_throw_run(target$metrics$error) : 
+  error reading from connection
+Error in `tar_throw_run()`:
+! callr subprocess failed: error reading from connection
+Visit https://books.ropensci.org/targets/debugging.html for debugging advice.
+Backtrace:
+    x
+ 1. \-targets::tar_make()
+ 2.   \-targets:::callr_outer(...)
+ 3.     \-base::tryCatch(...)
+ 4.       \-base tryCatchList(expr, classes, parentenv, handlers)
+ 5.         \-base tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 6.           \-value[[3L]](cond)
+ 7.             \-targets::tar_throw_run(...)
+ 8.               \-rlang::abort(...)
+Execution halted
+slurmstepd: error: Detected 8 oom-kill event(s) in StepId=22828229.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.

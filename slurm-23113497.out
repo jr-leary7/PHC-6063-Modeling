@@ -1,0 +1,60 @@
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+v skip target nn_mod
+v skip target xgboost_mod
+v skip target diab_data_raw
+v skip target rf_mod
+v skip target naive_bayes_mod
+v skip target knn_mod
+v skip target diab_data_clean
+v skip target diab_val_split
+v skip target diab_val_data
+v skip target diab_analysis_data
+v skip target diab_tt_split
+v skip target diab_test
+v skip target diab_train
+v skip target xgboost_recipe
+v skip target diab_train_folds
+v skip target nn_recipe
+v skip target naive_bayes_recipe
+v skip target knn_recipe
+v skip target rf_recipe
+v skip target xgboost_workflow
+v skip target nn_workflow
+v skip target naive_bayes_workflow
+v skip target knn_workflow
+v skip target rf_workflow
+v skip target xgboost_tuning_res
+v skip target nn_tuning_res
+v skip target naive_bayes_fit
+v skip target knn_tuning_res
+* start target rf_tuning_res
+x error target rf_tuning_res
+* end pipeline: 1.642 hours
+Error in tar_throw_run(target$metrics$error) : 
+  error reading from connection
+Error in `tar_throw_run()`:
+! callr subprocess failed: error reading from connection
+Visit https://books.ropensci.org/targets/debugging.html for debugging advice.
+Backtrace:
+    x
+ 1. \-targets::tar_make()
+ 2.   \-targets:::callr_outer(...)
+ 3.     \-base::tryCatch(...)
+ 4.       \-base tryCatchList(expr, classes, parentenv, handlers)
+ 5.         \-base tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 6.           \-value[[3L]](cond)
+ 7.             \-targets::tar_throw_run(...)
+ 8.               \-rlang::abort(...)
+Execution halted
+slurmstepd: error: Detected 25 oom-kill event(s) in StepId=23113497.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.
