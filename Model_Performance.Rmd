@@ -1,0 +1,240 @@
+---
+title: "Assessing Diabetes Prediction Model Performance"
+subtitle: "PHC 6063 - Final Project"
+author: "Jack Leary"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: journal
+    highlight: tango
+    code_folding: show
+    df_print: kable
+    toc: true
+    toc_float: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      comment = NA)
+```
+
+# Libraries 
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+# Data 
+
+## Predictions
+
+First we'll read in the raw results. 
+
+```{r}
+diab_train <- tar_read("diab_train")
+diab_test <- tar_read("diab_test")
+naive_bayes_train_preds <- tar_read("naive_bayes_train_preds")
+naive_bayes_test_preds <- tar_read("naive_bayes_test_preds")
+knn_train_preds <- tar_read("knn_train_preds")
+knn_test_preds <- tar_read("knn_test_preds")
+xgboost_train_preds <- tar_read("xgboost_train_preds")
+xgboost_test_preds <- tar_read("xgboost_test_preds")
+nn_train_preds <- tar_read("nn_train_preds")
+nn_test_preds <- tar_read("nn_test_preds")
+train_pred_list <- list(naive_bayes_train_preds, knn_train_preds, xgboost_train_preds, nn_train_preds)
+test_pred_list <- list(naive_bayes_test_preds, knn_test_preds, xgboost_test_preds, nn_test_preds)
+mod_types <- list("Naive Bayes", "K-nearest Neighbors", "XGBoost", "Neural Network")
+```
+
+Next we'll do some cleaning to get predictions for all models on the train and test data into single tables. 
+
+```{r}
+train_pred_df <- map2(train_pred_list,
+                      mod_types, 
+                      function(x, y) {
+                        x %>% mutate(Real_Diagnosis = diab_train$DIAGNOSIS, 
+                                     Pred_Diagnosis = case_when(.pred_None > .pred_Diabetes & .pred_None > .pred_Diabetes ~ "None", 
+                                                                .pred_Diabetes > .pred_None & .pred_Diabetes > .pred_Diabetes ~ "Prediabetes",
+                                                                TRUE ~ "Diabetes"), 
+                                     Pred_Diagnosis = factor(Pred_Diagnosis, levels = c("None", "Prediabetes", "Diabetes")), 
+                                     Model_Type = y)
+                        }) %>% 
+                reduce(bind_rows) %>% 
+                mutate(Correct_Pred_Ind = case_when(Real_Diagnosis == Pred_Diagnosis ~ 1, TRUE ~ 0))
+train_auc_df <- map2(train_pred_list, 
+                     mod_types, 
+                      function(x, y) {
+                        x %>% 
+                          mutate(Real_Diagnosis = diab_train$DIAGNOSIS) %>% 
+                          roc_curve(truth = Real_Diagnosis, .estimate = contains(".pred")) %>% 
+                          mutate(Model = y)
+                        }) %>% 
+                reduce(bind_rows)
+train_auc_sumy <- map2(train_pred_list, 
+                       mod_types, 
+                        function(x, y) {
+                          x %>% 
+                            mutate(Real_Diagnosis = diab_train$DIAGNOSIS) %>% 
+                            roc_auc(truth = Real_Diagnosis, .estimate = contains(".pred")) %>% 
+                            mutate(Model = y)
+                          }) %>% 
+                  reduce(bind_rows)
+test_pred_df <- map2(test_pred_list, 
+                     mod_types, 
+                     function(x, y) {
+                       x %>% mutate(Real_Diagnosis = diab_test$DIAGNOSIS, 
+                                    Pred_Diagnosis = case_when(.pred_None > .pred_Diabetes & .pred_None > .pred_Diabetes ~ "None", 
+                                                               .pred_Diabetes > .pred_None & .pred_Diabetes > .pred_Diabetes ~ "Prediabetes",
+                                                               TRUE ~ "Diabetes"), 
+                                    Pred_Diagnosis = factor(Pred_Diagnosis, levels = c("None", "Prediabetes", "Diabetes")), 
+                                    Model_Type = y)
+                       }) %>% 
+                reduce(bind_rows) %>% 
+                mutate(Correct_Pred_Ind = case_when(Real_Diagnosis == Pred_Diagnosis ~ 1, TRUE ~ 0))
+test_auc_df <- map2(test_pred_list, 
+                    mod_types, 
+                    function(x, y) {
+                      x %>% 
+                        mutate(Real_Diagnosis = diab_test$DIAGNOSIS) %>% 
+                        roc_curve(truth = Real_Diagnosis, .estimate = contains(".pred")) %>% 
+                        mutate(Model = y)
+                      }) %>% 
+                reduce(bind_rows)
+test_auc_sumy <- map2(test_pred_list, 
+                      mod_types, 
+                       function(x, y) {
+                         x %>% 
+                           mutate(Real_Diagnosis = diab_test$DIAGNOSIS) %>% 
+                           roc_auc(truth = Real_Diagnosis, .estimate = contains(".pred")) %>% 
+                           mutate(Model = y)
+                         }) %>% 
+                  reduce(bind_rows)
+```
+
+
+```{r}
+train_auc_df %>% 
+  mutate(Model = factor(Model, levels = c("K-nearest Neighbors", "XGBoost", "Neural Network", "Naive Bayes"))) %>% 
+  ggplot(aes(x = 1 - specificity, y = sensitivity, color = Model)) + 
+  facet_wrap(~.level) + 
+  geom_line(size = 0.75) + 
+  geom_abline(slope = 1, intercept = 0, color = "black", linetype = "dashed", size = 0.75) + 
+  scale_color_paletteer_d("ggsci::category10_d3") + 
+  scale_x_continuous(labels = scales::number_format(accuracy = 0.1)) + 
+  labs(x = "1 - Specificity", 
+       y = "Sensitivity", 
+       title = "Training Set Performance") + 
+  theme_classic(base_size = 15) + 
+  theme(legend.position = "bottom", 
+        plot.title = element_text(hjust = 0.5), 
+        plot.title.position = "plot", 
+        legend.title = element_blank())
+
+test_auc_df %>% 
+  mutate(Model = factor(Model, levels = c("K-nearest Neighbors", "XGBoost", "Neural Network", "Naive Bayes"))) %>% 
+  ggplot(aes(x = 1 - specificity, y = sensitivity, color = Model)) + 
+  facet_wrap(~.level) + 
+  geom_line(size = 0.75) + 
+  geom_abline(slope = 1, intercept = 0, color = "black", linetype = "dashed", size = 0.75) + 
+  scale_color_paletteer_d("ggsci::category10_d3") + 
+  scale_x_continuous(labels = scales::number_format(accuracy = 0.1)) + 
+  labs(x = "1 - Specificity", 
+       y = "Sensitivity", 
+       title = "Test Set Performance") + 
+  theme_classic(base_size = 15) + 
+  theme(legend.position = "bottom", 
+        plot.title = element_text(hjust = 0.5), 
+        plot.title.position = "plot", 
+        legend.title = element_blank())
+```
+
+
+## Model Performance 
+
+### Train Set
+
+```{r}
+train_model_perf_df <- tar_read("knn_tuning_res") %>% 
+                       collect_metrics() %>% 
+                       mutate(Model = "K-nearest Neighbors") %>% 
+                       filter(.metric == "roc_auc")  %>% 
+                       select(Model, mean) %>% 
+                       bind_rows((tar_read("xgboost_tuning_res") %>% 
+                                  collect_metrics() %>% 
+                                  mutate(Model = "XGBoost") %>% 
+                                  filter(.metric == "roc_auc") %>% 
+                                  select(Model, mean))) %>% 
+                       bind_rows((tar_read("nn_tuning_res") %>% 
+                                  collect_metrics() %>% 
+                                  mutate(Model = "Neural Network") %>% 
+                                  filter(.metric == "roc_auc") %>% 
+                                  select(Model, mean))) %>% 
+                       mutate(Model = factor(Model, levels = c("K-nearest Neighbors", "XGBoost", "Neural Network", "Naive Bayes")))
+```
+
+```{r}
+ggplot(train_model_perf_df, aes(x = Model, y = mean, fill = Model)) + 
+  geom_violin(scale = "width", draw_quantiles= 0.5, size = 1) + 
+  labs(x = NULL, 
+       y = "ROC-AUC", 
+       title = "Model Train Set Performance") + 
+  scale_fill_paletteer_d("ggsci::category10_d3") + 
+  theme_classic(base_size = 15) + 
+  theme(plot.title = element_text(hjust = 0.5), plot.title.position = "plot") 
+```
+
+
+```{r}
+xgboost_test_preds %>% 
+  mutate(True_Class = diab_test$DIAGNOSIS, 
+         Pred_Diagnosis = case_when(.pred_None > .pred_Prediabetes & .pred_None > .pred_Diabetes ~ "None", 
+                                    .pred_Prediabetes > .pred_None & .pred_Prediabetes > .pred_Diabetes ~ "Prediabetes",
+                                    TRUE ~ "Diabetes"), 
+         Pred_Diagnosis = factor(Pred_Diagnosis, levels = c("None", "Prediabetes", "Diabetes"))) %>% 
+  conf_mat(truth = True_Class, estimate = Pred_Diagnosis)
+```
+
+
+
+```{r}
+xgboost_fit <- tar_read("xgboost_fit")
+xgboost_fit %>% 
+  pull_workflow_fit() %>% 
+  vip::vip(num_features = 10) %>% 
+  .$data %>% 
+  mutate(Variable = factor(Variable, levels = rev(.$Variable))) %>% 
+  ggplot(aes(y = Variable, x = Importance, fill = Variable)) + 
+  geom_bar(stat = "identity", color = "black", show.legend = FALSE) + 
+  scale_fill_paletteer_d("ggsci::category10_d3") + 
+  labs(x = "Feature Importance", y = NULL) + 
+  theme_classic(base_size = 15)
+```
+
+```{r}
+diab_val_data <- tar_read("diab_val_data")
+diab_val_preds <- predict(xgboost_fit, new_data = diab_val_data, type = "prob")
+overall_auc_roc <- diab_val_preds %>% 
+                   mutate(Real_Diagnosis = diab_val_data$DIAGNOSIS) %>% 
+                   roc_auc(truth = Real_Diagnosis, .estimate = contains(".pred"))
+diab_val_preds %>% 
+  mutate(Real_Diagnosis = diab_val_data$DIAGNOSIS) %>% 
+  roc_curve(truth = Real_Diagnosis, .estimate = contains(".pred")) %>% 
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) + 
+  facet_wrap(~.level) + 
+  geom_line(size = 1, color = "forestgreen") + 
+  geom_abline(slope = 1, intercept = 0, color = "black", linetype = "dashed", size = 0.75) + 
+  scale_x_continuous(labels = scales::number_format(accuracy = 0.1)) + 
+  labs(x = "1 - Specificity", 
+       y = "Sensitivity", 
+       title = "Validation Set Performance", 
+       caption = paste0("AUC-ROC = ", round(overall_auc_roc$.estimate, 4) * 100, "%")) + 
+  theme_classic(base_size = 15) + 
+  theme(legend.position = "bottom", 
+        plot.title = element_text(hjust = 0.5), 
+        plot.title.position = "plot", 
+        legend.title = element_blank())
+```
+
