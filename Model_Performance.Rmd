@@ -23,6 +23,8 @@ knitr::opts_chunk$set(echo = TRUE,
 # Libraries 
 
 ```{r}
+library(targets)
+library(paletteer)
 library(tidyverse)
 library(tidymodels)
 ```
@@ -202,7 +204,7 @@ xgboost_test_preds %>%
 ```{r}
 xgboost_fit <- tar_read("xgboost_fit")
 xgboost_fit %>% 
-  pull_workflow_fit() %>% 
+  extract_fit_parsnip() %>% 
   vip::vip(num_features = 10) %>% 
   .$data %>% 
   mutate(Variable = factor(Variable, levels = rev(.$Variable))) %>% 
@@ -212,6 +214,51 @@ xgboost_fit %>%
   labs(x = "Feature Importance", y = NULL) + 
   theme_classic(base_size = 15)
 ```
+
+
+```{r}
+xgboost_test_preds %>% 
+  mutate(Y = diab_test$DIAGNOSIS, 
+         BMI = diab_test$BMI) %>% 
+  ggplot(aes(x = BMI, y = .pred_Diabetes)) + 
+  geom_point() + 
+  geom_smooth() + 
+  theme_classic(base_size = 15)
+
+xgboost_test_preds %>% 
+  mutate(Y = diab_test$DIAGNOSIS, 
+         GEN_HEALTH = as.factor(diab_test$GENERAL_HEALTH)) %>% 
+  ggplot(aes(x = GEN_HEALTH, y = .pred_Diabetes, fill = GEN_HEALTH)) + 
+  geom_violin(scale = "width", draw_quantiles = 0.5, size = 0.75) + 
+  labs(x = "General Health (Lower = Better Health)", y = "P(Diabetes)", fill = "General\nHealth") + 
+  theme_classic(base_size = 15)
+
+xgboost_test_preds %>% 
+  mutate(Y = diab_test$DIAGNOSIS, 
+         INCOME = as.factor(diab_test$INCOME_CATEGORY)) %>% 
+  ggplot(aes(x = INCOME, y = .pred_Diabetes, fill = INCOME)) + 
+  geom_violin(scale = "width", draw_quantiles = 0.5, size = 0.75) + 
+  labs(x = "Income Strata (Lower = Poorer)", y = "P(Diabetes)", fill = "Income Strata") + 
+  theme_classic(base_size = 15)
+
+xgboost_test_preds %>% 
+  mutate(Y = diab_test$DIAGNOSIS, 
+         AGE = as.factor(diab_test$AGE_CATEGORY)) %>% 
+  ggplot(aes(x = AGE, y = .pred_Diabetes, fill = AGE)) + 
+  geom_violin(scale = "width", draw_quantiles = 0.5, size = 0.75) + 
+  labs(x = "Age Strata (Lower = Younger)", y = "P(Diabetes)", fill = "Age\nStrata") + 
+  theme_classic(base_size = 15)
+
+xgboost_test_preds %>% 
+  mutate(Y = diab_test$DIAGNOSIS, 
+         MENTAL = diab_test$MENTAL_HEALTH_BAD_LAST_30_DAYS) %>% 
+  ggplot(aes(x = MENTAL, y = .pred_Diabetes)) + 
+  geom_smooth() + 
+  labs(x = "Number of Poor Mental Health Days in Prior Month", y = "P(Diabetes)") + 
+  theme_classic(base_size = 15)
+```
+
+
 
 ```{r}
 diab_val_data <- tar_read("diab_val_data")
